@@ -23,7 +23,7 @@ export default function Index({allPosts, allStatics}: Props) {
         <>
             <Layout>
                 <Head>
-                    <title>{`Next.js Blog Example with ${CMS_NAME}`}</title>
+                    <title>{"Социальный фонд \"Право на жизнь\""}</title>
                 </Head>
                 <Container>
                     <Intro allStatics={allStatics}/>
