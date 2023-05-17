@@ -10,19 +10,19 @@ import PostTitle from '../../components/post-title'
 import Head from 'next/head'
 import {CMS_NAME} from '../../lib/constants'
 import markdownToHtml from '../../lib/markdownToHtml'
-import type PostType from '../../interfaces/post'
+import type StaticItem from '../../interfaces/staticItem'
 
 type Props = {
-    post: PostType
-    morePosts: PostType[]
+    post: StaticItem
+    morePosts: StaticItem[]
     preview?: boolean
 }
 
-export default function Static({post, morePosts, preview}: Props) {
+export default function Statics({post, morePosts, preview}: Props) {
     console.log(post)
     const router = useRouter()
     const title = `${post.title} | Next.js Blog Example with ${CMS_NAME}`
-    if (!router.isFallback && !post?.slug) {
+    if (!router.isFallback && !post?.statics) {
         return <ErrorPage statusCode={404}/>
     }
     return (
@@ -36,13 +36,12 @@ export default function Static({post, morePosts, preview}: Props) {
                         <article className="mb-32">
                             <Head>
                                 <title>{title}</title>
-                                <meta property="og:image" content={post.ogImage.url}/>
+                                <meta property="og:image" content={''}/>
                             </Head>
                             <PostHeader
                                 title={post.title}
                                 coverImage={post.coverImage}
-                                date={post.date}
-                                author={post.author}
+                                date={''}
                             />
                             <PostBody content={post.content}/>
                         </article>
@@ -55,16 +54,17 @@ export default function Static({post, morePosts, preview}: Props) {
 
 type Params = {
     params: {
-        slug: string
+        statics: string
     }
 }
 
 export async function getStaticProps({params}: Params) {
+    console.log('params', params)
     const staticItem = getPostBySlug(
-        params.slug,
+        params.statics,
         [
             'title',
-            'slug',
+            'statics',
             'content',
             'coverImage',
         ],
@@ -83,13 +83,13 @@ export async function getStaticProps({params}: Params) {
 }
 
 export async function getStaticPaths() {
-    const statics = getAllStaticContent(['slug'])
-
+    const statics = getAllStaticContent(['statics'])
+    console.log('statics', statics)
     return {
         paths: statics.map((staticItem) => {
             return {
                 params: {
-                    slug: staticItem.slug,
+                    statics: staticItem.statics,
                 },
             }
         }),

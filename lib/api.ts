@@ -1,47 +1,60 @@
 import fs from 'fs'
-import { join } from 'path'
+import {join} from 'path'
 import matter from 'gray-matter'
 
-const postsDirectory = join(process.cwd(), '_posts')
+const postsOrStaticsDirectory = (isStatic: boolean = false) => join(process.cwd(), isStatic ? '_static' : '_posts')
 
-export function getPostSlugs() {
-  return fs.readdirSync(postsDirectory)
+export function getItemContent(isStatic: boolean = false) {
+    return fs.readdirSync(postsOrStaticsDirectory(isStatic))
 }
 
-export function getPostBySlug(slug: string, fields: string[] = []) {
-  const realSlug = slug.replace(/\.md$/, '')
-  const fullPath = join(postsDirectory, `${realSlug}.md`)
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
-  const { data, content } = matter(fileContents)
+let called = 1;
 
-  type Items = {
-    [key: string]: string
-  }
+export function getPostBySlug(dataItem: string, fields: string[] = [], isStatic: boolean = false) {
+    const realData = dataItem?.replace(/\.md$/, '')
+    const fullPath = join(postsOrStaticsDirectory(isStatic), `${realData}.md`)
+    const fileContents = fs.readFileSync(fullPath, 'utf8')
+    const {data, content} = matter(fileContents)
 
-  const items: Items = {}
-
-  // Ensure only the minimal needed data is exposed
-  fields.forEach((field) => {
-    if (field === 'slug') {
-      items[field] = realSlug
-    }
-    if (field === 'content') {
-      items[field] = content
+    type Items = {
+        [key: string]: string
     }
 
-    if (typeof data[field] !== 'undefined') {
-      items[field] = data[field]
-    }
-  })
+    const items: Items = {}
 
-  return items
+    // Ensure only the minimal needed data is exposed
+    fields.forEach((field) => {
+        if (field === 'slug' || field === 'statics') {
+            items[field] = realData
+        }
+        if (field === 'content') {
+            items[field] = content
+        }
+
+        if (typeof data[field] !== 'undefined') {
+            items[field] = data[field]
+        }
+    })
+    console.log('22222 called times', called)
+    called++
+    return items
 }
 
 export function getAllPosts(fields: string[] = []) {
-  const slugs = getPostSlugs()
-  const posts = slugs
-    .map((slug) => getPostBySlug(slug, fields))
+    const slugs = getItemContent()
+    const posts = slugs
+        .map((slug) => getPostBySlug(slug, fields))
+        // sort posts by date in descending order
+        .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
+    return posts
+}
+
+export function getAllStaticContent(fields: string[] = []) {
+    const contents = getItemContent(true)
+
+    const statics = contents
+        .map((content) => getPostBySlug(content, fields, true))
     // sort posts by date in descending order
-    .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
-  return posts
+    // .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
+    return statics
 }
